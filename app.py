@@ -1,260 +1,166 @@
-# =====================================================
-# API BACKEND - SISTEMA RESTAURANTE
-# Flask + PostgreSQL (SQL PURO)
-# =====================================================
-
 from flask import Flask, request, jsonify, send_file
-from flask_cors import CORS
-import psycopg2
-import psycopg2.extras
+from db import get_connection
 import csv
-from io import StringIO
-from config import Config
 
-# =====================================================
-# INICIALIZAR FLASK
-# =====================================================
 app = Flask(__name__)
-CORS(app)
 
-# =====================================================
-# CONEXIÓN A POSTGRESQL
-# =====================================================
-def get_db_connection():
-    return psycopg2.connect(Config.get_db_url())
+# =========================
+# 🔹 CRUD CLIENTE
+# =========================
 
-# =====================================================
-# 1. CRUD - CREAR PEDIDO (POST /api/pedidos)
-# =====================================================
-@app.route('/api/pedidos', methods=['POST'])
-def crear_pedido():
+@app.route('/clientes', methods=['POST'])
+def crear_cliente():
     data = request.json
-    conn = get_db_connection()
+    conn = get_connection()
     cur = conn.cursor()
-    
-    try:
-        cur.execute("BEGIN;")
-        
-        cur.execute("""
-            INSERT INTO PEDIDO (id_cliente, id_empleado, id_mesa, estado, total)
-            VALUES (%s, %s, %s, 'Pendiente', 0) RETURNING id_pedido
-        """, (data['id_cliente'], data['id_empleado'], data['id_mesa']))
-        id_pedido = cur.fetchone()[0]
-        
-        cur.execute("SELECT precio FROM PRODUCTO WHERE id_producto = %s", (data['id_producto'],))
-        precio = cur.fetchone()[0]
-        subtotal = precio * data['cantidad']
-        
-        cur.execute("""
-            INSERT INTO DETALLE_PEDIDO (id_pedido, id_producto, cantidad, precio_unitario, subtotal)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (id_pedido, data['id_producto'], data['cantidad'], precio, subtotal))
-        
-        cur.execute("UPDATE PRODUCTO SET stock = stock - %s WHERE id_producto = %s",
-                   (data['cantidad'], data['id_producto']))
-        
-        cur.execute("UPDATE PEDIDO SET total = %s WHERE id_pedido = %s", (subtotal, id_pedido))
-        
-        cur.execute("UPDATE MESA SET estado = 'Ocupada' WHERE id_mesa = %s", (data['id_mesa'],))
-        
-        cur.execute("COMMIT;")
-        
-        return jsonify({'mensaje': 'Pedido registrado', 'id_pedido': id_pedido}), 201
-    
-    except Exception as e:
-        cur.execute("ROLLBACK;")
-        return jsonify({'error': str(e)}), 400
-    finally:
-        cur.close()
-        conn.close()
 
-# =====================================================
-# 2. CRUD - LISTAR PEDIDOS (GET /api/pedidos)
-# =====================================================
-@app.route('/api/pedidos', methods=['GET'])
-def listar_pedidos():
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    
     try:
         cur.execute("""
-            SELECT p.id_pedido, c.nombre AS cliente, p.total, p.estado, p.fecha_hora
-            FROM PEDIDO p
-            JOIN CLIENTE c ON p.id_cliente = c.id_cliente
-            ORDER BY p.id_pedido DESC
-        """)
-        return jsonify([dict(row) for row in cur.fetchall()])
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
-    finally:
-        cur.close()
-        conn.close()
+            INSERT INTO cliente (nombre, email)
+            VALUES (%s, %s)
+            RETURNING id_cliente;
+        """, (data['nombre'], data['email']))
 
-# =====================================================
-# 3. CRUD - EDITAR PEDIDO (PUT /api/pedidos/<id>)
-# =====================================================
-@app.route('/api/pedidos/<int:id_pedido>', methods=['PUT'])
-def editar_pedido(id_pedido):
-    data = request.json
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    try:
-        cur.execute("""
-            UPDATE PEDIDO SET estado = %s, total = %s WHERE id_pedido = %s
-        """, (data.get('estado'), data.get('total'), id_pedido))
         conn.commit()
-        return jsonify({'mensaje': 'Pedido actualizado'})
+        return jsonify({"mensaje": "Cliente creado"})
     except Exception as e:
         conn.rollback()
-        return jsonify({'error': str(e)}), 400
+        return jsonify({"error": str(e)})
     finally:
         cur.close()
         conn.close()
 
-# =====================================================
-# 4. CRUD - ELIMINAR PEDIDO (DELETE /api/pedidos/<id>)
-# =====================================================
-@app.route('/api/pedidos/<int:id_pedido>', methods=['DELETE'])
-def eliminar_pedido(id_pedido):
-    conn = get_db_connection()
+
+@app.route('/clientes', methods=['GET'])
+def listar_clientes():
+    conn = get_connection()
     cur = conn.cursor()
-    
-    try:
-        cur.execute("BEGIN;")
-        cur.execute("DELETE FROM DETALLE_PEDIDO WHERE id_pedido = %s", (id_pedido,))
-        cur.execute("DELETE FROM PEDIDO WHERE id_pedido = %s", (id_pedido,))
-        cur.execute("COMMIT;")
-        return jsonify({'mensaje': 'Pedido eliminado'})
-    except Exception as e:
-        cur.execute("ROLLBACK;")
-        return jsonify({'error': str(e)}), 400
-    finally:
-        cur.close()
-        conn.close()
 
-# =====================================================
-# 5. REPORTE GROUP BY/HAVING (GET /api/reporte/ventas)
-# =====================================================
-@app.route('/api/reporte/ventas', methods=['GET'])
-def reporte_ventas():
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    
-    try:
-        cur.execute("""
-            SELECT 
-                pr.nombre AS producto,
-                SUM(dp.cantidad) AS unidades_vendidas,
-                SUM(dp.subtotal) AS ingresos_totales
-            FROM PRODUCTO pr
-            JOIN DETALLE_PEDIDO dp ON pr.id_producto = dp.id_producto
-            JOIN PEDIDO p ON dp.id_pedido = p.id_pedido
-            WHERE p.estado = 'Entregado'
-            GROUP BY pr.id_producto, pr.nombre
-            HAVING SUM(dp.cantidad) > 0
-            ORDER BY unidades_vendidas DESC
-        """)
-        return jsonify([dict(row) for row in cur.fetchall()])
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
-    finally:
-        cur.close()
-        conn.close()
+    cur.execute("SELECT * FROM cliente;")
+    data = cur.fetchall()
 
-# =====================================================
-# 6. EXPORTAR A CSV (GET /api/reporte/exportar-csv)
-# =====================================================
-@app.route('/api/reporte/exportar-csv', methods=['GET'])
-def exportar_csv():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    try:
-        cur.execute("""
-            SELECT 
-                pr.nombre AS producto,
-                SUM(dp.cantidad) AS unidades_vendidas,
-                SUM(dp.subtotal) AS ingresos_totales
-            FROM PRODUCTO pr
-            JOIN DETALLE_PEDIDO dp ON pr.id_producto = dp.id_producto
-            JOIN PEDIDO p ON dp.id_pedido = p.id_pedido
-            WHERE p.estado = 'Entregado'
-            GROUP BY pr.id_producto, pr.nombre
-            HAVING SUM(dp.cantidad) > 0
-            ORDER BY unidades_vendidas DESC
-        """)
-        rows = cur.fetchall()
-        
-        output = StringIO()
-        writer = csv.writer(output)
-        writer.writerow(['producto', 'unidades_vendidas', 'ingresos_totales'])
-        for row in rows:
-            writer.writerow(row)
-        output.seek(0)
-        
-        return send_file(
-            output,
-            mimetype='text/csv',
-            as_attachment=True,
-            download_name='reporte_ventas.csv'
-        )
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
-    finally:
-        cur.close()
-        conn.close()
+    cur.close()
+    conn.close()
 
-# =====================================================
-# 7. JSONB - GUARDAR (POST /api/pedidos/jsonb)
-# =====================================================
-@app.route('/api/pedidos/jsonb', methods=['POST'])
-def insertar_jsonb():
+    return jsonify(data)
+
+
+@app.route('/clientes/<int:id>', methods=['PUT'])
+def actualizar_cliente(id):
     data = request.json
-    conn = get_db_connection()
+    conn = get_connection()
     cur = conn.cursor()
-    
+
     try:
-        cur.execute("INSERT INTO PEDIDO_JSONB (datos) VALUES (%s) RETURNING id_pedido",
-                   (data['datos'],))
-        id_pedido = cur.fetchone()[0]
+        cur.execute("""
+            UPDATE cliente
+            SET nombre = %s, email = %s
+            WHERE id_cliente = %s;
+        """, (data['nombre'], data['email'], id))
+
         conn.commit()
-        return jsonify({'mensaje': 'JSONB guardado', 'id_pedido': id_pedido}), 201
+        return jsonify({"mensaje": "Actualizado"})
     except Exception as e:
         conn.rollback()
-        return jsonify({'error': str(e)}), 400
+        return jsonify({"error": str(e)})
     finally:
         cur.close()
         conn.close()
 
-# =====================================================
-# 8. JSONB - CONSULTAR (GET /api/pedidos/jsonb)
-# =====================================================
-@app.route('/api/pedidos/jsonb', methods=['GET'])
-def consultar_jsonb():
-    nombre = request.args.get('nombre')
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    
+
+@app.route('/clientes/<int:id>', methods=['DELETE'])
+def eliminar_cliente(id):
+    conn = get_connection()
+    cur = conn.cursor()
+
     try:
-        if nombre:
+        cur.execute("DELETE FROM cliente WHERE id_cliente = %s;", (id,))
+        conn.commit()
+        return jsonify({"mensaje": "Eliminado"})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)})
+    finally:
+        cur.close()
+        conn.close()
+
+# =========================
+# 🔥 TRANSACCIÓN COMPLEJA (3 TABLAS)
+# =========================
+
+@app.route('/pedido-completo', methods=['POST'])
+def pedido_completo():
+    data = request.json
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("BEGIN;")
+
+        # 1. crear pedido
+        cur.execute("""
+            INSERT INTO pedido (id_cliente)
+            VALUES (%s) RETURNING id_pedido;
+        """, (data['id_cliente'],))
+
+        id_pedido = cur.fetchone()[0]
+
+        # 2. insertar detalle
+        for item in data['productos']:
             cur.execute("""
-                SELECT * FROM PEDIDO_JSONB
-                WHERE datos->'cliente'->>'nombre' = %s
-            """, (nombre,))
-        else:
-            cur.execute("SELECT * FROM PEDIDO_JSONB")
-        return jsonify([dict(row) for row in cur.fetchall()])
+                INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad)
+                VALUES (%s, %s, %s);
+            """, (id_pedido, item['id_producto'], item['cantidad']))
+
+            # 3. actualizar stock
+            cur.execute("""
+                UPDATE producto
+                SET stock = stock - %s
+                WHERE id_producto = %s;
+            """, (item['cantidad'], item['id_producto']))
+
+        conn.commit()
+        return jsonify({"mensaje": "Pedido completo OK"})
+
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        conn.rollback()
+        return jsonify({"error": str(e)})
+
     finally:
         cur.close()
         conn.close()
 
-# =====================================================
-# INICIAR SERVIDOR
-# =====================================================
+# =========================
+# 📊 REPORTE + CSV
+# =========================
+
+@app.route('/reporte', methods=['GET'])
+def reporte():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT c.nombre, COUNT(p.id_pedido) as total
+        FROM cliente c
+        JOIN pedido p ON c.id_cliente = p.id_cliente
+        GROUP BY c.nombre;
+    """)
+
+    rows = cur.fetchall()
+
+    filename = "reporte.csv"
+
+    with open(filename, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Cliente", "Total pedidos"])
+        writer.writerows(rows)
+
+    cur.close()
+    conn.close()
+
+    return send_file(filename, as_attachment=True)
+
+# =========================
+
 if __name__ == '__main__':
-    print("🚀 API RESTAURANTE")
-    print("📍 http://127.0.0.1:5000")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)
