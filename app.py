@@ -3,41 +3,23 @@ from flask_cors import CORS
 import psycopg2
 import psycopg2.extras
 import csv
-import json
 from io import StringIO, BytesIO
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
 def get_db_connection():
     return psycopg2.connect(
-        host=os.getenv('DB_HOST', 'localhost'),
-        database=os.getenv('DB_NAME', 'restaurante'),
-        user=os.getenv('DB_USER', 'postgres'),
-        password=os.getenv('DB_PASSWORD', 'comida'),
-        port=os.getenv('DB_PORT', '5432')
+        host='localhost',
+        database='restaurante',
+        user='postgres',
+        password='comida',
+        port='5432'
     )
 
 @app.route('/')
 def home():
-    return jsonify({
-        'mensaje': 'Restaurante - Sistema de Gestion',
-        'endpoints': {
-            'GET /': 'Bienvenida',
-            'GET /api/pedidos': 'Listar pedidos',
-            'POST /api/pedidos': 'Crear pedido',
-            'GET /api/reporte/ventas': 'Reporte GROUP BY/HAVING',
-            'GET /api/reporte/exportar-csv': 'Exportar a CSV',
-            'GET /api/reporte/productos': 'Reporte productos por categoria',
-            'GET /api/reporte/productos-csv': 'Exportar CSV productos',
-            'GET /api/jsonb': 'Consultar JSONB',
-            'POST /api/jsonb': 'Guardar JSONB'
-        }
-    })
+    return jsonify({'mensaje': 'API Restaurante'})
 
 @app.route('/api/pedidos', methods=['GET'])
 def listar_pedidos():
@@ -82,6 +64,47 @@ def crear_pedido():
         cur.execute("UPDATE MESA SET estado = 'Ocupada' WHERE id_mesa = %s", (data['id_mesa'],))
         cur.execute("COMMIT;")
         return jsonify({'mensaje': 'Pedido registrado', 'id_pedido': id_pedido}), 201
+    except Exception as e:
+        cur.execute("ROLLBACK;")
+        return jsonify({'error': str(e)}), 400
+    finally:
+        cur.close()
+        conn.close()
+
+# =====================================================
+# ENDPOINT PUT - EDITAR PEDIDO
+# =====================================================
+@app.route('/api/pedidos/<int:id_pedido>', methods=['PUT'])
+def editar_pedido(id_pedido):
+    data = request.json
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            UPDATE PEDIDO SET estado = %s, total = %s WHERE id_pedido = %s
+        """, (data['estado'], data['total'], id_pedido))
+        conn.commit()
+        return jsonify({'mensaje': 'Pedido actualizado'})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 400
+    finally:
+        cur.close()
+        conn.close()
+
+# =====================================================
+# ENDPOINT DELETE - ELIMINAR PEDIDO
+# =====================================================
+@app.route('/api/pedidos/<int:id_pedido>', methods=['DELETE'])
+def eliminar_pedido(id_pedido):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("BEGIN;")
+        cur.execute("DELETE FROM DETALLE_PEDIDO WHERE id_pedido = %s", (id_pedido,))
+        cur.execute("DELETE FROM PEDIDO WHERE id_pedido = %s", (id_pedido,))
+        cur.execute("COMMIT;")
+        return jsonify({'mensaje': 'Pedido eliminado'})
     except Exception as e:
         cur.execute("ROLLBACK;")
         return jsonify({'error': str(e)}), 400
@@ -211,6 +234,7 @@ def guardar_jsonb():
     conn = get_db_connection()
     cur = conn.cursor()
     try:
+        import json
         json_data = json.dumps(data['datos'])
         cur.execute(
             "INSERT INTO PEDIDO_JSONB (datos) VALUES (%s) RETURNING id_pedido",
@@ -247,6 +271,6 @@ def consultar_jsonb():
         conn.close()
 
 if __name__ == '__main__':
-    print("🚀 API RESTAURANTE")
-    print("📍 http://localhost:5000")
+    print("API Restaurante")
+    print("http://localhost:5000")
     app.run(debug=True, host='0.0.0.0', port=5000)
