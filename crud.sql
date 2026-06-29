@@ -1,5 +1,5 @@
 
---Pagos
+-- Pagos
 INSERT INTO PAGO (monto, metodo, fcha_pago, estado, id_pedido) 
 VALUES (15000, 'tarjeta debito', CURRENT_DATE, 'pendiente', 5);
 
@@ -10,7 +10,7 @@ UPDATE PEDIDO SET estado = 'Pagado' WHERE id_pedido = 5;
 
 UPDATE PAGO SET estado = 'completado' WHERE id_pedido = 5;
 
---Compra a proveedor
+-- Compra a proveedor
 INSERT INTO COMPRA (fecha, total, estado, id_scrsal, id_prvdor)
 VALUES (CURRENT_DATE, 0, 'recibido', 1, 1);
 
