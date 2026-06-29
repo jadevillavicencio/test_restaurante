@@ -1,6 +1,6 @@
-
--- PERSONA 1: 
-
+-- =====================================================
+-- NOSQL / JSONB (HÍBRIDO)
+-- =====================================================
 
 CREATE TABLE PEDIDO_JSONB (
     id_pedido SERIAL PRIMARY KEY,
@@ -34,9 +34,6 @@ VALUES ('{
 SELECT * FROM PEDIDO_JSONB
 WHERE datos->'cliente'->>'nombre' = 'Juan';
 
-
--- PERSONA 2: COMPRAS (JSONB)
-
 CREATE TABLE COMPRA_JSONB (
     id_compra SERIAL PRIMARY KEY,
     datos JSONB
@@ -67,9 +64,6 @@ VALUES ('{
 SELECT * FROM COMPRA_JSONB
 WHERE datos->'proveedor'->>'nombre' = 'Brynja';
 
-
--- PERSONA 3: PAGOS Y FACTURAS (JSONB)
-
 CREATE TABLE PAGO_JSONB (
     id_pago SERIAL PRIMARY KEY,
     datos JSONB
@@ -98,10 +92,6 @@ VALUES ('{
 
 SELECT * FROM PAGO_JSONB
 WHERE datos->'pago'->>'metodo' = 'tarjeta debito';
-
-
--- PERSONA 4: RESERVAS (JSONB)
-
 
 CREATE TABLE RESERVA_JSONB (
     id_reserva SERIAL PRIMARY KEY,
