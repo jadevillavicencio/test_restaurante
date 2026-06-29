@@ -1,4 +1,4 @@
--- ÍNDICES DE PEDIDO
+
 EXPLAIN ANALYZE SELECT * FROM PEDIDO WHERE id_cliente = 1;
 
 CREATE INDEX idx_pedido_cliente ON PEDIDO(id_cliente);
