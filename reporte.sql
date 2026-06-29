@@ -1,4 +1,5 @@
---Ventas por Sucursal
+
+
 SELECT 
     s.nombre AS sucursal,
     COUNT(DISTINCT p.id_pedido) AS total_pedidos,
@@ -10,7 +11,6 @@ GROUP BY s.id_scrsal, s.nombre
 HAVING COALESCE(SUM(p.total), 0) > 100
 ORDER BY total_ventas DESC;
 
--- Productos más vendidos
 SELECT 
     pr.nombre AS producto,
     SUM(dp.cantidad) AS unidades_vendidas
