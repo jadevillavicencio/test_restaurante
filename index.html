@@ -2,57 +2,41 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Restaurante - Sistema de Gestión</title>
+    <title>Restaurante - Gestión</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div class="container">
-        <h1>Restaurante - Sistema de Gestión</h1>
-        <p style="color:#666; margin-bottom:20px;">API: http://localhost:5000</p>
+        <h1>🍽️ Restaurante</h1>
+        <p>API: http://localhost:5000</p>
 
-        <!-- Pestañas -->
         <div class="tabs">
             <button class="tab-btn active" onclick="mostrarTab('crud')">Pedidos</button>
             <button class="tab-btn" onclick="mostrarTab('reportes')">Reportes</button>
             <button class="tab-btn" onclick="mostrarTab('jsonb')">JSONB</button>
         </div>
 
-        <!-- ========================================== -->
-        <!-- PESTAÑA 1: CRUD                            -->
-        <!-- ========================================== -->
+        <!-- CRUD -->
         <div id="tab-crud" class="tab-content active">
             <div class="grid-2">
-
-                <!-- Crear Pedido -->
                 <div class="card">
                     <h3>Crear Pedido</h3>
-                    <label>Cliente:</label>
-                    <input type="number" id="cr_cliente" value="1" />
-                    <label>Empleado:</label>
-                    <input type="number" id="cr_empleado" value="2" />
-                    <label>Mesa:</label>
-                    <input type="number" id="cr_mesa" value="3" />
-                    <label>Producto:</label>
-                    <input type="number" id="cr_producto" value="10" />
-                    <label>Cantidad:</label>
-                    <input type="number" id="cr_cantidad" value="2" />
+                    <label>Cliente:</label><input type="number" id="cr_cliente" value="1">
+                    <label>Empleado:</label><input type="number" id="cr_empleado" value="2">
+                    <label>Mesa:</label><input type="number" id="cr_mesa" value="3">
+                    <label>Producto:</label><input type="number" id="cr_producto" value="10">
+                    <label>Cantidad:</label><input type="number" id="cr_cantidad" value="2">
                     <button onclick="crearPedido()">Crear</button>
                     <div id="resultado-crear" class="resultado">Listo</div>
                 </div>
-
-                <!-- Listar Pedidos -->
                 <div class="card">
                     <h3>Listar Pedidos</h3>
                     <button onclick="listarPedidos()">Ver todos</button>
                     <div id="resultado-listar" class="resultado">Listo</div>
                 </div>
-
-                <!-- Editar Pedido -->
                 <div class="card">
                     <h3>Editar Pedido</h3>
-                    <label>ID Pedido:</label>
-                    <input type="number" id="ed_id" value="1" />
+                    <label>ID:</label><input type="number" id="ed_id" value="1">
                     <label>Estado:</label>
                     <select id="ed_estado">
                         <option>Pendiente</option>
@@ -60,82 +44,56 @@
                         <option>Entregado</option>
                         <option>Cancelado</option>
                     </select>
-                    <label>Total:</label>
-                    <input type="number" id="ed_total" value="50" />
+                    <label>Total:</label><input type="number" id="ed_total" value="50">
                     <button onclick="editarPedido()">Actualizar</button>
                     <div id="resultado-editar" class="resultado">Listo</div>
                 </div>
-
-                <!-- Eliminar Pedido -->
                 <div class="card">
                     <h3>Eliminar Pedido</h3>
-                    <label>ID Pedido:</label>
-                    <input type="number" id="del_id" value="1" />
+                    <label>ID:</label><input type="number" id="del_id" value="1">
                     <button onclick="eliminarPedido()">Eliminar</button>
                     <div id="resultado-eliminar" class="resultado">Listo</div>
                 </div>
-
             </div>
         </div>
 
-        <!-- ========================================== -->
-        <!-- PESTAÑA 2: REPORTES                        -->
-        <!-- ========================================== -->
+        <!-- REPORTES -->
         <div id="tab-reportes" class="tab-content">
             <div class="grid-2">
-
-                <!-- Reporte Ventas -->
                 <div class="card">
                     <h3>Ventas por Cliente</h3>
-                    <p style="font-size:13px;color:#666;margin-bottom:10px;">GROUP BY / HAVING</p>
                     <button onclick="reporteVentas()">Ver Reporte</button>
-                    <button onclick="exportarCSV()" style="margin-top:5px;">Exportar CSV</button>
+                    <button onclick="exportarCSV()">Exportar CSV</button>
                     <div id="resultado-reporte" class="resultado">Listo</div>
                 </div>
-
-                <!-- Reporte Productos -->
                 <div class="card">
-                    <h3>Productos por Categoria</h3>
-                    <p style="font-size:13px;color:#666;margin-bottom:10px;">GROUP BY / HAVING</p>
+                    <h3>Productos por Categoría</h3>
                     <button onclick="reporteProductos()">Ver Reporte</button>
-                    <button onclick="exportarProductosCSV()" style="margin-top:5px;">Exportar CSV</button>
+                    <button onclick="exportarProductosCSV()">Exportar CSV</button>
                     <div id="resultado-reporte-productos" class="resultado">Listo</div>
                 </div>
-
             </div>
         </div>
 
-        <!-- ========================================== -->
-        <!-- PESTAÑA 3: JSONB                           -->
-        <!-- ========================================== -->
+        <!-- JSONB -->
         <div id="tab-jsonb" class="tab-content">
             <div class="grid-2">
-
                 <div class="card">
                     <h3>Guardar JSONB</h3>
-                    <label>Datos:</label>
-                    <textarea id="jsonb_datos">{
-    "cliente": {"nombre": "Luis", "apellido": "Rodriguez"},
-    "productos": [{"nombre": "Ceviche", "cantidad": 1}],
-    "total": 25.00
-}</textarea>
+                    <textarea id="jsonb_datos">{"cliente":{"nombre":"Luis"},"productos":[{"nombre":"Ceviche","cantidad":1}],"total":25}</textarea>
                     <button onclick="guardarJSONB()">Guardar</button>
                     <div id="resultado-jsonb-guardar" class="resultado">Listo</div>
                 </div>
-
                 <div class="card">
                     <h3>Consultar JSONB</h3>
-                    <label>Nombre del Cliente:</label>
-                    <input type="text" id="jsonb_nombre" placeholder="Ej: Juan" value="Luis" />
+                    <input type="text" id="jsonb_nombre" placeholder="Nombre del cliente" value="Luis">
                     <button onclick="consultarJSONB()">Buscar</button>
                     <div id="resultado-jsonb-consultar" class="resultado">Listo</div>
                 </div>
-
             </div>
         </div>
 
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
