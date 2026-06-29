@@ -2,98 +2,444 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Restaurante - Gestión</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurante - Sistema de Gestion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: #f0f2f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1a1a2e;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .status {
+            background: #2d3436;
+            color: #00ff88;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #ecf0f1;
+            font-weight: 600;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+        .tab-btn.active {
+            background: #2c3e50;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 18px;
+            border: 1px solid #e9ecef;
+        }
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #2d3436;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-top: 4px;
+            font-size: 14px;
+        }
+        textarea {
+            min-height: 70px;
+            font-family: monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            background: #2c3e50;
+            color: white;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #1a252f;
+        }
+        .btn-success { background: #27ae60; }
+        .btn-success:hover { background: #1e8449; }
+        .btn-danger { background: #e74c3c; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-warning { background: #f39c12; }
+        .btn-warning:hover { background: #d68910; }
+        .btn-info { background: #3498db; }
+        .btn-info:hover { background: #2980b9; }
+        .resultado {
+            background: #1a1a2e;
+            color: #00ff88;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-height: 200px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .resultado.error {
+            color: #ff6b6b;
+        }
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🍽️ Restaurante</h1>
-        <p>API: http://localhost:5000</p>
 
-        <div class="tabs">
-            <button class="tab-btn active" onclick="mostrarTab('crud')">Pedidos</button>
-            <button class="tab-btn" onclick="mostrarTab('reportes')">Reportes</button>
-            <button class="tab-btn" onclick="mostrarTab('jsonb')">JSONB</button>
-        </div>
+<div class="container">
+    <h1>Restaurante - Sistema de Gestion</h1>
+    <div class="status">API: http://127.0.0.1:5000  -  Estado: Conectado</div>
 
-        <!-- CRUD -->
-        <div id="tab-crud" class="tab-content active">
-            <div class="grid-2">
-                <div class="card">
-                    <h3>Crear Pedido</h3>
-                    <label>Cliente:</label><input type="number" id="cr_cliente" value="1">
-                    <label>Empleado:</label><input type="number" id="cr_empleado" value="2">
-                    <label>Mesa:</label><input type="number" id="cr_mesa" value="3">
-                    <label>Producto:</label><input type="number" id="cr_producto" value="10">
-                    <label>Cantidad:</label><input type="number" id="cr_cantidad" value="2">
-                    <button onclick="crearPedido()">Crear</button>
-                    <div id="resultado-crear" class="resultado">Listo</div>
-                </div>
-                <div class="card">
-                    <h3>Listar Pedidos</h3>
-                    <button onclick="listarPedidos()">Ver todos</button>
-                    <div id="resultado-listar" class="resultado">Listo</div>
-                </div>
-                <div class="card">
-                    <h3>Editar Pedido</h3>
-                    <label>ID:</label><input type="number" id="ed_id" value="1">
-                    <label>Estado:</label>
-                    <select id="ed_estado">
-                        <option>Pendiente</option>
-                        <option>En preparación</option>
-                        <option>Entregado</option>
-                        <option>Cancelado</option>
-                    </select>
-                    <label>Total:</label><input type="number" id="ed_total" value="50">
-                    <button onclick="editarPedido()">Actualizar</button>
-                    <div id="resultado-editar" class="resultado">Listo</div>
-                </div>
-                <div class="card">
-                    <h3>Eliminar Pedido</h3>
-                    <label>ID:</label><input type="number" id="del_id" value="1">
-                    <button onclick="eliminarPedido()">Eliminar</button>
-                    <div id="resultado-eliminar" class="resultado">Listo</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- REPORTES -->
-        <div id="tab-reportes" class="tab-content">
-            <div class="grid-2">
-                <div class="card">
-                    <h3>Ventas por Cliente</h3>
-                    <button onclick="reporteVentas()">Ver Reporte</button>
-                    <button onclick="exportarCSV()">Exportar CSV</button>
-                    <div id="resultado-reporte" class="resultado">Listo</div>
-                </div>
-                <div class="card">
-                    <h3>Productos por Categoría</h3>
-                    <button onclick="reporteProductos()">Ver Reporte</button>
-                    <button onclick="exportarProductosCSV()">Exportar CSV</button>
-                    <div id="resultado-reporte-productos" class="resultado">Listo</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- JSONB -->
-        <div id="tab-jsonb" class="tab-content">
-            <div class="grid-2">
-                <div class="card">
-                    <h3>Guardar JSONB</h3>
-                    <textarea id="jsonb_datos">{"cliente":{"nombre":"Luis"},"productos":[{"nombre":"Ceviche","cantidad":1}],"total":25}</textarea>
-                    <button onclick="guardarJSONB()">Guardar</button>
-                    <div id="resultado-jsonb-guardar" class="resultado">Listo</div>
-                </div>
-                <div class="card">
-                    <h3>Consultar JSONB</h3>
-                    <input type="text" id="jsonb_nombre" placeholder="Nombre del cliente" value="Luis">
-                    <button onclick="consultarJSONB()">Buscar</button>
-                    <div id="resultado-jsonb-consultar" class="resultado">Listo</div>
-                </div>
-            </div>
-        </div>
-
+    <!-- Pestañas -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="crud">Pedidos</button>
+        <button class="tab-btn" data-tab="reportes">Reportes</button>
+        <button class="tab-btn" data-tab="jsonb">JSONB</button>
     </div>
-    <script src="script.js"></script>
+
+    <!-- ==================== PESTAÑA 1: CRUD ==================== -->
+    <div id="tab-crud" class="tab-content active">
+        <div class="grid-2">
+
+            <!-- Crear Pedido -->
+            <div class="card">
+                <h3>Crear Pedido</h3>
+                <label>Cliente:</label>
+                <input type="number" id="cr_cliente" value="1">
+                <label>Empleado:</label>
+                <input type="number" id="cr_empleado" value="2">
+                <label>Mesa:</label>
+                <input type="number" id="cr_mesa" value="3">
+                <label>Producto:</label>
+                <input type="number" id="cr_producto" value="10">
+                <label>Cantidad:</label>
+                <input type="number" id="cr_cantidad" value="2">
+                <button class="btn-success" onclick="crearPedido()">Crear</button>
+                <div id="resultado-crear" class="resultado">Esperando accion...</div>
+            </div>
+
+            <!-- Listar Pedidos -->
+            <div class="card">
+                <h3>Listar Pedidos</h3>
+                <button class="btn-info" onclick="listarPedidos()">Ver todos</button>
+                <div id="resultado-listar" class="resultado">Esperando accion...</div>
+            </div>
+
+            <!-- Editar Pedido -->
+            <div class="card">
+                <h3>Editar Pedido</h3>
+                <label>ID:</label>
+                <input type="number" id="ed_id" value="1">
+                <label>Estado:</label>
+                <select id="ed_estado">
+                    <option>Pendiente</option>
+                    <option>En preparacion</option>
+                    <option>Entregado</option>
+                    <option>Cancelado</option>
+                </select>
+                <label>Total:</label>
+                <input type="number" id="ed_total" value="50" step="0.01">
+                <button class="btn-warning" onclick="editarPedido()">Actualizar</button>
+                <div id="resultado-editar" class="resultado">Esperando accion...</div>
+            </div>
+
+            <!-- Eliminar Pedido -->
+            <div class="card">
+                <h3>Eliminar Pedido</h3>
+                <label>ID:</label>
+                <input type="number" id="del_id" value="1">
+                <button class="btn-danger" onclick="eliminarPedido()">Eliminar</button>
+                <div id="resultado-eliminar" class="resultado">Esperando accion...</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ==================== PESTAÑA 2: REPORTES ==================== -->
+    <div id="tab-reportes" class="tab-content">
+        <div class="grid-2">
+
+            <div class="card">
+                <h3>Ventas por Cliente</h3>
+                <button class="btn-info" onclick="reporteVentas()">Ver Reporte</button>
+                <button class="btn-success" onclick="exportarCSV()" style="margin-top:5px;">Exportar CSV</button>
+                <div id="resultado-reporte" class="resultado">Esperando accion...</div>
+            </div>
+
+            <div class="card">
+                <h3>Productos por Categoria</h3>
+                <button class="btn-info" onclick="reporteProductos()">Ver Reporte</button>
+                <button class="btn-success" onclick="exportarProductosCSV()" style="margin-top:5px;">Exportar CSV</button>
+                <div id="resultado-reporte-productos" class="resultado">Esperando accion...</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ==================== PESTAÑA 3: JSONB ==================== -->
+    <div id="tab-jsonb" class="tab-content">
+        <div class="grid-2">
+
+            <div class="card">
+                <h3>Guardar JSONB</h3>
+                <label>Datos:</label>
+                <textarea id="jsonb_datos">{"cliente":{"nombre":"Luis","apellido":"Rodriguez"},"productos":[{"nombre":"Ceviche","cantidad":1}],"total":25.00}</textarea>
+                <button class="btn-success" onclick="guardarJSONB()">Guardar</button>
+                <div id="resultado-jsonb-guardar" class="resultado">Esperando accion...</div>
+            </div>
+
+            <div class="card">
+                <h3>Consultar JSONB</h3>
+                <label>Nombre del Cliente:</label>
+                <input type="text" id="jsonb_nombre" placeholder="Ej: Juan" value="Luis">
+                <button class="btn-info" onclick="consultarJSONB()">Buscar</button>
+                <div id="resultado-jsonb-consultar" class="resultado">Esperando accion...</div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const API = 'http://127.0.0.1:5000';
+
+    // =============================================
+    // TABS
+    // =============================================
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+        });
+    });
+
+    // =============================================
+    // UTILIDADES
+    // =============================================
+    function mostrarResultado(id, data, isError = false) {
+        const el = document.getElementById(id);
+        if (typeof data === 'object') {
+            el.textContent = JSON.stringify(data, null, 2);
+        } else {
+            el.textContent = data;
+        }
+        el.className = 'resultado' + (isError ? ' error' : '');
+    }
+
+    // =============================================
+    // 1. CREAR PEDIDO
+    // =============================================
+    async function crearPedido() {
+        const data = {
+            id_cliente: parseInt(document.getElementById('cr_cliente').value),
+            id_empleado: parseInt(document.getElementById('cr_empleado').value),
+            id_mesa: parseInt(document.getElementById('cr_mesa').value),
+            id_producto: parseInt(document.getElementById('cr_producto').value),
+            cantidad: parseInt(document.getElementById('cr_cantidad').value)
+        };
+        try {
+            const res = await fetch(API + '/api/pedidos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            mostrarResultado('resultado-crear', result, !res.ok);
+        } catch (e) {
+            mostrarResultado('resultado-crear', 'Error: ' + e.message, true);
+        }
+    }
+
+    // =============================================
+    // 2. LISTAR PEDIDOS
+    // =============================================
+    async function listarPedidos() {
+        try {
+            const res = await fetch(API + '/api/pedidos');
+            const result = await res.json();
+            mostrarResultado('resultado-listar', result, !res.ok);
+        } catch (e) {
+            mostrarResultado('resultado-listar', 'Error: ' + e.message, true);
+        }
+    }
+
+    // =============================================
+    // 3. EDITAR PEDIDO
+    // =============================================
+    async function editarPedido() {
+        const id = parseInt(document.getElementById('ed_id').value);
+        const data = {
+            estado: document.getElementById('ed_estado').value,
+            total: parseFloat(document.getElementById('ed_total').value)
+        };
+        try {
+            const res = await fetch(API + '/api/pedidos/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            mostrarResultado('resultado-editar', result, !res.ok);
+        } catch (e) {
+            mostrarResultado('resultado-editar', 'Error: ' + e.message, true);
+        }
+    }
+
+    // =============================================
+    // 4. ELIMINAR PEDIDO
+    // =============================================
+    async function eliminarPedido() {
+        const id = parseInt(document.getElementById('del_id').value);
+        if (!confirm('Seguro que quieres eliminar el pedido ' + id + '?')) return;
+        try {
+            const res = await fetch(API + '/api/pedidos/' + id, { method: 'DELETE' });
+            const result = await res.json();
+            mostrarResultado('resultado-eliminar', result, !res.ok);
+        } catch (e) {
+            mostrarResultado('resultado-eliminar', 'Error: ' + e.message, true);
+        }
+    }
+
+    // =============================================
+    // 5. REPORTE VENTAS
+    // =============================================
+    async function reporteVentas() {
+        try {
+            const res = await fetch(API + '/api/reporte/ventas');
+            const result = await res.json();
+            mostrarResultado('resultado-reporte', result, !res.ok);
+        } catch (e) {
+            mostrarResultado('resultado-reporte', 'Error: ' + e.message, true);
+        }
+    }
+
+    function exportarCSV() {
+        window.open(API + '/api/reporte/exportar-csv', '_blank');
+    }
+
+    // =============================================
+    // 6. REPORTE PRODUCTOS
+    // =============================================
+    async function reporteProductos() {
+        try {
+            const res = await fetch(API + '/api/reporte/productos');
+            const result = await res.json();
+            mostrarResultado('resultado-reporte-productos', result, !res.ok);
+        } catch (e) {
+            mostrarResultado('resultado-reporte-productos', 'Error: ' + e.message, true);
+        }
+    }
+
+    function exportarProductosCSV() {
+        window.open(API + '/api/reporte/productos-csv', '_blank');
+    }
+
+    // =============================================
+    // 7. JSONB GUARDAR
+    // =============================================
+    async function guardarJSONB() {
+        try {
+            const datos = JSON.parse(document.getElementById('jsonb_datos').value);
+            const res = await fetch(API + '/api/jsonb', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ datos })
+            });
+            const result = await res.json();
+            mostrarResultado('resultado-jsonb-guardar', result, !res.ok);
+        } catch (e) {
+            mostrarResultado('resultado-jsonb-guardar', 'Error: ' + e.message, true);
+        }
+    }
+
+    // =============================================
+    // 8. JSONB CONSULTAR
+    // =============================================
+    async function consultarJSONB() {
+        const nombre = document.getElementById('jsonb_nombre').value;
+        try {
+            const url = nombre ? API + '/api/jsonb?nombre=' + encodeURIComponent(nombre) : API + '/api/jsonb';
+            const res = await fetch(url);
+            const result = await res.json();
+            mostrarResultado('resultado-jsonb-consultar', result, !res.ok);
+        } catch (e) {
+            mostrarResultado('resultado-jsonb-consultar', 'Error: ' + e.message, true);
+        }
+    }
+
+    // =============================================
+    // Carga inicial: listar pedidos
+    // =============================================
+    document.addEventListener('DOMContentLoaded', listarPedidos);
+</script>
+
 </body>
 </html>
